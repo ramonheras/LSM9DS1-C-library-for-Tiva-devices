@@ -20,33 +20,36 @@ Distributed as-is; no warranty is given.
 #ifndef __LSM9DS1_Types_H__
 #define __LSM9DS1_Types_H__
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "LSM9DS1_Registers.h"
 
 // The LSM9DS1 functions over both I2C or SPI. This library supports both.
 // But the interface mode used must be sent to the LSM9DS1 constructor. Use
 // one of these two as the first parameter of the constructor.
-enum interface_mode
+typedef enum interface_mode
 {
 	IMU_MODE_SPI,
 	IMU_MODE_I2C,
-};
+} interface_mode;
 
 // accel_scale defines all possible FSR's of the accelerometer:
-enum accel_scale
+typedef enum
 {
 	A_SCALE_2G,  // 00:  2g
 	A_SCALE_16G, // 01:  16g
 	A_SCALE_4G,  // 10:  4g
 	A_SCALE_8G   // 11:  8g
-};
+} accel_scale;
 
 // gyro_scale defines the possible full-scale ranges of the gyroscope:
-enum gyro_scale
+typedef enum
 {
 	G_SCALE_245DPS,  // 00:  245 degrees per second
 	G_SCALE_500DPS,  // 01:  500 dps
 	G_SCALE_2000DPS, // 11:  2000 dps
-};
+} gyro_scale;
 
 // mag_scale defines all possible FSR's of the magnetometer:
 enum mag_scale
@@ -58,7 +61,7 @@ enum mag_scale
 };
 
 // gyro_odr defines all possible data rate/bandwidth combos of the gyro:
-enum gyro_odr
+typedef enum
 {
 	//! TODO
 	G_ODR_PD,  // Power down (0)
@@ -68,9 +71,9 @@ enum gyro_odr
 	G_ODR_238, // 238 Hz (4)
 	G_ODR_476, // 476 Hz (5)
 	G_ODR_952  // 952 Hz (6)
-};
+} gyro_odr;
 // accel_oder defines all possible output data rates of the accelerometer:
-enum accel_odr
+typedef enum
 {
 	XL_POWER_DOWN, // Power-down mode (0x0)
 	XL_ODR_10,	 // 10 Hz (0x1)
@@ -79,19 +82,19 @@ enum accel_odr
 	XL_ODR_238,	// 238 Hz (0x4)
 	XL_ODR_476,	// 476 Hz (0x5)
 	XL_ODR_952	 // 952 Hz (0x6)
-};
+} accel_odr;
 
 // accel_abw defines all possible anti-aliasing filter rates of the accelerometer:
-enum accel_abw
+typedef enum
 {
 	A_ABW_408, // 408 Hz (0x0)
 	A_ABW_211, // 211 Hz (0x1)
 	A_ABW_105, // 105 Hz (0x2)
 	A_ABW_50,  //  50 Hz (0x3)
-};
+} accel_abw;
 
 // mag_odr defines all possible output data rates of the magnetometer:
-enum mag_odr
+typedef enum
 {
 	M_ODR_0625, // 0.625 Hz (0)
 	M_ODR_125,  // 1.25 Hz (1)
@@ -101,15 +104,15 @@ enum mag_odr
 	M_ODR_20,   // 20 Hz (5)
 	M_ODR_40,   // 40 Hz (6)
 	M_ODR_80	// 80 Hz (7)
-};
+} mag_odr;
 
-enum interrupt_select
+typedef enum
 {
 	XG_INT1 = INT1_CTRL,
 	XG_INT2 = INT2_CTRL
-};
+} interrupt_select;
 
-enum interrupt_generators
+typedef enum
 {
 	INT_DRDY_XL = (1 << 0),	// Accelerometer data ready (INT1 & INT2)
 	INT_DRDY_G = (1 << 1),	 // Gyroscope data ready (INT1 & INT2)
@@ -121,9 +124,9 @@ enum interrupt_generators
 	INT_IG_XL = (1 << 6),	  // Accel interrupt generator (INT1)
 	INT1_IG_G = (1 << 7),	  // Gyro interrupt enable (INT1)
 	INT2_INACT = (1 << 7),	 // Inactivity interrupt output (INT2)
-};
+} interrupt_generators;
 
-enum accel_interrupt_generator
+typedef enum
 {
 	XLIE_XL = (1 << 0),
 	XHIE_XL = (1 << 1),
@@ -132,9 +135,9 @@ enum accel_interrupt_generator
 	ZLIE_XL = (1 << 4),
 	ZHIE_XL = (1 << 5),
 	GEN_6D = (1 << 6)
-};
+}  accel_interrupt_generator;
 
-enum gyro_interrupt_generator
+typedef enum
 {
 	XLIE_G = (1 << 0),
 	XHIE_G = (1 << 1),
@@ -142,37 +145,37 @@ enum gyro_interrupt_generator
 	YHIE_G = (1 << 3),
 	ZLIE_G = (1 << 4),
 	ZHIE_G = (1 << 5)
-};
+} gyro_interrupt_generator;
 
-enum mag_interrupt_generator
+typedef enum
 {
 	ZIEN = (1 << 5),
 	YIEN = (1 << 6),
 	XIEN = (1 << 7)
-};
+} mag_interrupt_generator;
 
-enum h_lactive
+typedef enum
 {
 	INT_ACTIVE_HIGH,
 	INT_ACTIVE_LOW
-};
+} h_lactive;
 
-enum pp_od
+typedef enum
 {
 	INT_PUSH_PULL,
 	INT_OPEN_DRAIN
-};
+} pp_od;
 
-enum fifoMode_type
+typedef enum
 {
 	FIFO_OFF = 0,
 	FIFO_THS = 1,
 	FIFO_CONT_TRIGGER = 3,
 	FIFO_OFF_TRIGGER = 4,
 	FIFO_CONT = 6
-};
+} fifoMode_type;
 
-struct gyroSettings
+typedef struct
 {
 	// Gyroscope settings:
 	uint8_t enabled;
@@ -191,16 +194,16 @@ struct gyroSettings
 	uint8_t enableY;
 	uint8_t enableZ;
 	uint8_t latchInterrupt;
-};
+} gyroSettings;
 
-struct deviceSettings
+typedef struct
 {
 	uint8_t commInterface; // Can be I2C, SPI 4-wire or SPI 3-wire
 	uint8_t agAddress;	 // I2C address or SPI CS pin
 	uint8_t mAddress;	  // I2C address or SPI CS pin
-};
+} deviceSettings;
 
-struct accelSettings
+typedef struct
 {
 	// Accelerometer settings:
 	uint8_t enabled;
@@ -213,9 +216,9 @@ struct accelSettings
 	int8_t bandwidth;
 	uint8_t highResEnable;
 	uint8_t highResBandwidth;
-};
+} accelSettings;
 
-struct magSettings
+typedef struct
 {
 	// Magnetometer settings:
 	uint8_t enabled;
@@ -227,15 +230,15 @@ struct magSettings
 	uint8_t ZPerformance;
 	uint8_t lowPowerEnable;
 	uint8_t operatingMode;
-};
+} magSettings;
 
-struct temperatureSettings
+typedef struct
 {
 	// Temperature settings
 	uint8_t enabled;
-};
+}  temperatureSettings;
 
-struct IMUSettings
+typedef struct
 {
 	deviceSettings device;
 
@@ -244,7 +247,7 @@ struct IMUSettings
 	magSettings mag;
 
 	temperatureSettings temp;
-};
+} IMUSettings;
 
 #endif
 

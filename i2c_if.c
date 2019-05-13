@@ -38,14 +38,14 @@
 
 //Adaptada a FreeRTOS por J. M. Cano,  E Gonzalez e Ignacio Herrero
 // Para mejorar la eficiencia gestion del bus I2C aprovechando el RTOS se utilizan los siguientes mecanismos:
-// -> Las transacciones I2C las realiza una rutina de interrupción
+// -> Las transacciones I2C las realiza una rutina de interrupciï¿½n
 // -> Las funciones I2C_IF_Read, I2C_IF_ReadFrom e I2C_IF_Write envian los datos de la transaccion a realizar mediante una cola de mensaje.
 // -> La ISR va procesando las peticiones de transaccion/realizando nuevas transacciones. Cuando finaliza cada transaccion utiliza las DirectToTaskNotification para desbloquear la tarea.
 // Se mantiene la compatibilidad hacia atras, por eso las funciones de las bibliotecas bma222drv.c y tmp000drv.c no hay que cambiarlas.
 
 //2018. Adaptado de la CC3200 a la TIVA.
 // --> La TIVA no tiene flag de interrupcion por error y otras causas (NACK), hay que tratarlo de otra manera (Mediante una funcion que comrprueba si ha habido error).
-// --> Arreglado un fallo por el cual no saltaba la notificación directa a tarea en el caso de este error.
+// --> Arreglado un fallo por el cual no saltaba la notificaciï¿½n directa a tarea en el caso de este error.
 
 // Standard includes
 #include <stdbool.h>
@@ -237,7 +237,7 @@ I2C_IF_Write(unsigned char ucDevAddr,
 		IntPendSet(INT_I2C3);	//Produce un disparo software de la ISR (comienza a transmitir)....
 	}
 
-	//Espera a que se produzca la transacción (o haya error)...
+	//Espera a que se produzca la transacciï¿½n (o haya error)...
 	while (!(notifVal&(I2C_NOTIFY_WRITE_COMPLETE|I2C_NOTIFY_ERR)))
 	{
 		xTaskNotifyWait( 0, I2C_NOTIFY_WRITE_COMPLETE|I2C_NOTIFY_ERR, &notifVal, portMAX_DELAY);
@@ -293,7 +293,7 @@ I2C_IF_Read(unsigned char ucDevAddr,
 	}
 
 
-	//Espera a que se produzca la transacción (o haya error)...
+	//Espera a que se produzca la transacciï¿½n (o haya error)...
 	while (!(notifVal&(I2C_NOTIFY_READ_COMPLETE|I2C_NOTIFY_ERR)))
 	{
 		xTaskNotifyWait( 0, I2C_NOTIFY_READ_COMPLETE|I2C_NOTIFY_ERR, &notifVal, portMAX_DELAY);
@@ -371,9 +371,9 @@ I2C_IF_ReadFrom(unsigned char ucDevAddr,
 
 
 //Rutina de interrupcion.
-//Esta rutina parece muy larga, pero sólo se ejecuta una parte u otra según el estado en el que estemos...
-//Utiliza una máquina de estados para cambiar el comportamiento cuando se produce la interrupcion, ya que lo que se debe realizar depende de si estamos o no
-// en una transacción, del tipo de transaccion (escritura, lectura o escritura-lectura, y de que punto de dicha transacción estamos.
+//Esta rutina parece muy larga, pero sï¿½lo se ejecuta una parte u otra segï¿½n el estado en el que estemos...
+//Utiliza una mï¿½quina de estados para cambiar el comportamiento cuando se produce la interrupcion, ya que lo que se debe realizar depende de si estamos o no
+// en una transacciï¿½n, del tipo de transaccion (escritura, lectura o escritura-lectura, y de que punto de dicha transacciï¿½n estamos.
 // Para ello se utiliza la variable de estado g_i2cisrstate.
 
 void I2C_IF_ISR(void)
@@ -387,7 +387,7 @@ void I2C_IF_ISR(void)
 	I2CMasterIntClear(I2C3_BASE); //Borra el flag de interrupcion
 
 	//Primero tratamos posible error... (por ejemplo NACK)
-	if (I2CMasterErr(I2C3_BASE))
+	if (I2CMasterErr(I2C3_BASE)&&g_i2cisrstate!=STATE_IDLE)
 	{
 		I2CMasterIntDisable(I2C3_BASE);
 		xQueueReceiveFromISR(g_I2Cqueue,&transaction,&xHigherPriorityTaskWoken);
@@ -412,7 +412,7 @@ void I2C_IF_ISR(void)
 		return;
 	}
 
-	//Ejecuta la maquina de estados para responder al evento. Miramos primero en qué estado estamos.
+	//Ejecuta la maquina de estados para responder al evento. Miramos primero en quï¿½ estado estamos.
 	switch(g_i2cisrstate)
 	{
 		case STATE_IDLE:
@@ -441,7 +441,7 @@ void I2C_IF_ISR(void)
 						}
 						else
 						{	//Fallo de transmision. Elimino la transaccion en curso y aviso a la tarea
-							//Luego borro los flags de interrupción y compruebo si hay mas transacciones pendientes
+							//Luego borro los flags de interrupciï¿½n y compruebo si hay mas transacciones pendientes
 							xQueueReceiveFromISR(g_I2Cqueue,&transaction,&xHigherPriorityTaskWoken);
 							xTaskNotifyFromISR(transaction.OriginTask,I2C_NOTIFY_ERR,eSetBits,&xHigherPriorityTaskWoken);
 							if (xQueuePeekFromISR(g_I2Cqueue,&transaction)) IntPendSet(INT_I2C3);
@@ -463,7 +463,7 @@ void I2C_IF_ISR(void)
 							else
 							{
 								//Fallo de transmision. Elimino la transaccion en curso y aviso a la tarea
-								//Luego borro los flags de interrupción y compruebo si hay mas transacciones pendientes
+								//Luego borro los flags de interrupciï¿½n y compruebo si hay mas transacciones pendientes
 								xQueueReceiveFromISR(g_I2Cqueue,&transaction,&xHigherPriorityTaskWoken);
 								xTaskNotifyFromISR(transaction.OriginTask,I2C_NOTIFY_ERR,eSetBits,&xHigherPriorityTaskWoken);
 								if (xQueuePeekFromISR(g_I2Cqueue,&transaction)) IntPendSet(INT_I2C3);
@@ -480,7 +480,7 @@ void I2C_IF_ISR(void)
 							else
 							{
 								//Fallo de transmision. Elimino la transaccion en curso y aviso a la tarea
-								//Luego borro los flags de interrupción y compruebo si hay mas transacciones pendientes
+								//Luego borro los flags de interrupciï¿½n y compruebo si hay mas transacciones pendientes
 								xQueueReceiveFromISR(g_I2Cqueue,&transaction,&xHigherPriorityTaskWoken);
 								xTaskNotifyFromISR(transaction.OriginTask,I2C_NOTIFY_ERR,eSetBits,&xHigherPriorityTaskWoken);
 								//I2CMasterIntClearEx(I2C3_BASE,i2cflags);
@@ -493,7 +493,7 @@ void I2C_IF_ISR(void)
 			}
 			else
 			{	//No habia nada en la cola de ordenes I2C
-				//¿¿Que ha pasao??
+				//ï¿½ï¿½Que ha pasao??
 			}
 		}
 		break; //FIN DEL CASO STATE_IDLE...
@@ -554,7 +554,7 @@ void I2C_IF_ISR(void)
 					}
 					else
 					{	//Error
-						//Fallo de recepción. Elimino la transaccion en curso y aviso a la tarea
+						//Fallo de recepciï¿½n. Elimino la transaccion en curso y aviso a la tarea
 						//Deshabilita las ISR y vuelve al estado inicial. De parar la transaccion ya se encarga internamente I2CTransact (creo)
 						//Finalmente ompruebo si hay mas transacciones pendientes para volver a lanzar una
 						I2CMasterIntDisable(I2C3_BASE);
@@ -573,7 +573,7 @@ void I2C_IF_ISR(void)
 					}
 					else
 					{
-						//Fallo de recepción. Elimino la transaccion en curso y aviso a la tarea
+						//Fallo de recepciï¿½n. Elimino la transaccion en curso y aviso a la tarea
 						//Deshabilita las ISR y vuelve al estado inicial. De parar la transaccion ya se encarga internamente I2CTransact (creo)
 						//Finalmente ompruebo si hay mas transacciones pendientes para volver a lanzar una
 					    //La verdad es que esto podia ponerlo en una subfuncion, porque se repite muchiiiiisimo...
@@ -597,11 +597,11 @@ void I2C_IF_ISR(void)
 			{	//Ya no tengo que recibir mas. Ordeno la recepcion del ultimo byte y la condicion de stop
 				if (I2CTransact(I2C_MASTER_CMD_BURST_RECEIVE_FINISH)==SUCCESS)
 				{
-					g_i2cisrstate=STATE_READ_FINAL;	//Ultimo dato, la siguiente ISR finaliza la recepción
+					g_i2cisrstate=STATE_READ_FINAL;	//Ultimo dato, la siguiente ISR finaliza la recepciï¿½n
 				}
 				else
 				{
-					//Fallo de recepción. Elimino la transaccion en curso y aviso a la tarea
+					//Fallo de recepciï¿½n. Elimino la transaccion en curso y aviso a la tarea
 					//Deshabilita las ISR y vuelve al estado inicial. De parar la transaccion ya se encarga internamente I2CTransact (creo)
 					//Finalmente ompruebo si hay mas transacciones pendientes para volver a lanzar una
 					I2CMasterIntDisable(I2C3_BASE);
@@ -619,7 +619,7 @@ void I2C_IF_ISR(void)
 				}
 				else
 				{
-					//Fallo de recepción. Elimino la transaccion en curso y aviso a la tarea
+					//Fallo de recepciï¿½n. Elimino la transaccion en curso y aviso a la tarea
 					//Deshabilita las ISR y vuelve al estado inicial. De parar la transaccion ya se encarga internamente I2CTransact (creo)
 					//Finalmente ompruebo si hay mas transacciones pendientes para volver a lanzar una
 					I2CMasterIntDisable(I2C3_BASE); //,I2C_MASTER_INT_DATA|I2C_MASTER_INT_TIMEOUT|I2C_MASTER_INT_NACK);
@@ -676,6 +676,12 @@ I2C_IF_Open(unsigned long ulMode)
     //
     SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C3);
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+
+    //
+    // Set I2C pins pull-up.
+    //
+    MAP_GPIOPadConfigSet(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_STRENGTH_12MA, GPIO_PIN_TYPE_STD_WPU); //////////////////////////////////////////////////////
+
 
     //
     // Configure the pin muxing for I2C3 functions on port D0 and D1.
@@ -748,7 +754,7 @@ I2C_IF_Close()
     // Power OFF the I2C peripheral
     //
 
-	//xxx Debería comprobarse antes si no hay una transaccion en marcha!!!
+	//xxx Deberï¿½a comprobarse antes si no hay una transaccion en marcha!!!
 
 	IntDisable(INT_I2C3);	//Deshabilita la ISR
 	SysCtlPeripheralDisable(SYSCTL_PERIPH_I2C3);

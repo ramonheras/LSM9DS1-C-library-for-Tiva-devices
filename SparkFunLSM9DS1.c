@@ -96,6 +96,18 @@ bool LSM9DS1_is_autoCalc(){
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FUNCTIONS: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
+bool LSM9DS1_isConnected(){
+
+    uint8_t mTest = LSM9DS1_mReadByte(WHO_AM_I_M);      // Read the gyro WHO_AM_I
+    uint8_t xgTest = LSM9DS1_xgReadByte(WHO_AM_I_XG);   // Read the accel/mag WHO_AM_I
+    uint16_t whoAmICombined = (xgTest << 8) | mTest;
+
+    if (whoAmICombined == ((WHO_AM_I_AG_RSP << 8) | WHO_AM_I_M_RSP))
+      return true;
+    else
+      return false;
+}
+
 void LSM9DS1_init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
 {
 	settings.device.commInterface = interface;
@@ -208,14 +220,16 @@ uint16_t LSM9DS1_begin()
 	else if (settings.device.commInterface == IMU_MODE_SPI) 	// else, if we're using SPI
 	    LSM9DS1_initSPI();	// Initialize SPI
 		
+	vTaskDelay(10);
+
 	// To verify communication, we can read from the WHO_AM_I register of
 	// each device. Store those in a variable so we can return them.
 	uint8_t mTest = LSM9DS1_mReadByte(WHO_AM_I_M);		// Read the gyro WHO_AM_I
 	uint8_t xgTest = LSM9DS1_xgReadByte(WHO_AM_I_XG);	// Read the accel/mag WHO_AM_I
 	uint16_t whoAmICombined = (xgTest << 8) | mTest;
 	
-	if (whoAmICombined != ((WHO_AM_I_AG_RSP << 8) | WHO_AM_I_M_RSP))
-		return 0;
+	//if (whoAmICombined != ((WHO_AM_I_AG_RSP << 8) | WHO_AM_I_M_RSP))
+	//	return 0;
 	
 	// Gyro initialization stuff:
 	LSM9DS1_initGyro();	// This will "turn on" the gyro. Setting up interrupts, etc.
@@ -224,7 +238,7 @@ uint16_t LSM9DS1_begin()
 	LSM9DS1_initAccel(); // "Turn on" all axes of the accel. Set up interrupts, etc.
 	
 	// Magnetometer initialization stuff:
-	LSM9DS1_initMag(); // "Turn on" all axes of the mag. Set up interrupts, etc.
+	//LSM9DS1_initMag(); // "Turn on" all axes of the mag. Set up interrupts, etc.
 
 	// Once everything is initialized, return the WHO_AM_I registers we read:
 	return whoAmICombined;
@@ -1226,6 +1240,7 @@ void LSM9DS1_initI2C()
 
     	}
     
+    vTaskDelay(10);
 }
 
 void LSM9DS1_I2CwriteByte(uint8_t address, uint8_t subAddress, uint8_t data)

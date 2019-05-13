@@ -54,6 +54,7 @@ Distributed as-is; no warranty is given.
         ALL_AXIS
     } lsm9ds1_axis;
 
+    bool LSM9DS1_isConnected();
     void LSM9DS1_set_mAddress(uint8_t i_mAddress);  //magnetometer address
     void LSM9DS1_set_xgAddress(uint8_t i_xgAddress); //acelerometer and gyro address
     bool LSM9DS1_is_autoCalc();
@@ -61,7 +62,7 @@ Distributed as-is; no warranty is given.
     // begin() -- Initialize the gyro, accelerometer, and magnetometer.
     // This will set up the scale and output rate of each sensor. The values set
     // in the IMUSettings struct will take effect after calling this function.
-    uint16_t begin();
+    uint16_t LSM9DS1_begin();
 
     void LSM9DS1_calibrate(bool autoCalc);
     void LSM9DS1_calibrateMag(bool loadIn);
